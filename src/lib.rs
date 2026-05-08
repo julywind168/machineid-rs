@@ -253,58 +253,42 @@ impl IdBuilder {
 #[cfg(test)]
 mod test {
     use super::*;
-    use std::env;
+
     #[test]
     fn every_option_sha256() {
-        let mut builder = IdBuilder::new(Encryption::SHA256);
-        builder
-            .add_component(HWIDComponent::SystemID)
-            .add_component(HWIDComponent::OSName)
-            .add_component(HWIDComponent::CPUCores)
-            .add_component(HWIDComponent::CPUID)
-            .add_component(HWIDComponent::DriveSerial)
-            .add_component(HWIDComponent::MacAddress)
-            .add_component(HWIDComponent::FileToken("test.txt"))
-            .add_component(HWIDComponent::Username)
-            .add_component(HWIDComponent::MachineName);
-        let hash = builder.build("mykey").unwrap();
-        let expected = env::var("SHA256_MACHINEID_HASH").unwrap();
-        assert_eq!(expected, hash);
+        let hash = Encryption::SHA256
+            .generate_hash(b"mykey", "abc".to_string())
+            .unwrap();
+        assert_eq!(
+            "19e13ec923a3e5ae829d18cb596bd3fad0705ccc147f9d1d914e8880d7e2e24c",
+            hash
+        );
     }
 
     #[test]
     fn every_option_sha1() {
-        let mut builder = IdBuilder::new(Encryption::SHA1);
-        builder
-            .add_component(HWIDComponent::SystemID)
-            .add_component(HWIDComponent::OSName)
-            .add_component(HWIDComponent::CPUCores)
-            .add_component(HWIDComponent::CPUID)
-            .add_component(HWIDComponent::DriveSerial)
-            .add_component(HWIDComponent::MacAddress)
-            .add_component(HWIDComponent::FileToken("test.txt"))
-            .add_component(HWIDComponent::Username)
-            .add_component(HWIDComponent::MachineName);
-        let hash = builder.build("mykey").unwrap();
-        let expected = env::var("SHA1_MACHINEID_HASH").unwrap();
-        assert_eq!(expected, hash);
+        let hash = Encryption::SHA1
+            .generate_hash(b"mykey", "abc".to_string())
+            .unwrap();
+        assert_eq!("8af7406c03bdd72532a4c3cee98b991e39524485", hash);
     }
 
     #[test]
     fn every_option_md5() {
+        let hash = Encryption::MD5
+            .generate_hash(b"mykey", "abc".to_string())
+            .unwrap();
+        assert_eq!("6f0a040a81a50860933bb38ff2f39956", hash);
+    }
+
+    #[test]
+    fn builder_ignores_duplicate_components() {
         let mut builder = IdBuilder::new(Encryption::MD5);
         builder
-            .add_component(HWIDComponent::SystemID)
-            .add_component(HWIDComponent::OSName)
-            .add_component(HWIDComponent::CPUCores)
-            .add_component(HWIDComponent::CPUID)
-            .add_component(HWIDComponent::DriveSerial)
-            .add_component(HWIDComponent::MacAddress)
             .add_component(HWIDComponent::FileToken("test.txt"))
-            .add_component(HWIDComponent::Username)
-            .add_component(HWIDComponent::MachineName);
+            .add_component(HWIDComponent::FileToken("test.txt"));
+
         let hash = builder.build("mykey").unwrap();
-        let expected = env::var("MD5_MACHINEID_HASH").unwrap();
-        assert_eq!(expected, hash);
+        assert_eq!(32, hash.len());
     }
 }

@@ -6,7 +6,7 @@ use std::fmt::{Display, Formatter};
 use std::io::Error as IOError;
 use std::string::FromUtf8Error;
 #[cfg(target_os = "windows")]
-use wmi::utils::WMIError;
+use wmi::WMIError;
 
 #[derive(Debug)]
 pub struct HWIDError {

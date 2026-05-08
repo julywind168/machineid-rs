@@ -7,12 +7,7 @@ use serde::Deserialize;
 use winreg::{enums::HKEY_LOCAL_MACHINE, RegKey};
 
 #[cfg(target_os = "windows")]
-use wmi::{COMLibrary, WMIConnection};
-
-thread_local! {
-    #[cfg(target_os="windows")]
-    static COM_LIB:COMLibrary = COMLibrary::without_security().unwrap();
-}
+use wmi::WMIConnection;
 
 #[cfg(target_os = "windows")]
 pub fn get_hwid() -> Result<String, HWIDError> {
@@ -42,7 +37,7 @@ struct MACGeneric {
 
 #[cfg(target_os = "windows")]
 pub(crate) fn get_disk_id() -> Result<String, HWIDError> {
-    let con = WMIConnection::new(COM_LIB.with(|con| *con))?;
+    let con = WMIConnection::new()?;
     let ser: Vec<DiskGeneric> = con.raw_query("SELECT SerialNumber FROM Win32_PhysicalMedia")?;
     let serial = ser
         .get(0)
@@ -54,7 +49,7 @@ pub(crate) fn get_disk_id() -> Result<String, HWIDError> {
 
 #[cfg(target_os = "windows")]
 pub(crate) fn get_mac_address() -> Result<String, HWIDError> {
-    let con = WMIConnection::new(COM_LIB.with(|con| *con))?;
+    let con = WMIConnection::new()?;
     let ser: Vec<MACGeneric> =
         con.raw_query("SELECT MACAddress from Win32_NetworkAdapter WHERE MACAddress IS NOT NULL")?;
     Ok(ser
